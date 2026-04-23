@@ -6,7 +6,8 @@ from apps.sales.views import sync_sales, SalesListView
 from apps.users.views import (
     UserListView, UserCreateView, UserDetailView,
     BranchCreateView, BranchListView, BranchDetailView,
-    UOMListView, CurrencyListView
+    UOMListView, CurrencyListView,
+    ExpenseListView, ExpenseCreateView
 )
 from apps.gold_rates.views import RateDetailView
 
@@ -33,6 +34,10 @@ urlpatterns = [
     path('api/branches/create/', BranchCreateView.as_view(), name='branch-create'),
     path('api/branches/<int:pk>/', BranchDetailView.as_view(), name='branch-detail'),
     
+    # Expenses
+    path('api/expenses/', ExpenseListView.as_view(), name='expense-list'),
+    path('api/expenses/create/', ExpenseCreateView.as_view(), name='expense-create'),
+
     # Constants
     path('api/uoms/', UOMListView.as_view(), name='uom-list'),
     path('api/currencies/', CurrencyListView.as_view(), name='currency-list'),

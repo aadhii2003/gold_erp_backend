@@ -28,3 +28,15 @@ class Currency(models.Model):
 
     def __str__(self):
         return self.code
+
+class Expense(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='expenses')
+    source_name = models.CharField(max_length=255)
+    rate_per_gram = models.DecimalField(max_digits=12, decimal_places=2)
+    grams = models.DecimalField(max_digits=12, decimal_places=4)
+    total = models.DecimalField(max_digits=15, decimal_places=2)
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.source_name} - {self.total} ({self.branch.name})"

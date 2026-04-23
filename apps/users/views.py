@@ -2,11 +2,17 @@ from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import User
-from apps.branches.models import Branch, UOM, Currency
+from apps.branches.models import Branch, UOM, Currency, Expense
 
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
+        fields = '__all__'
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    branch_name = serializers.CharField(source='branch.name', read_only=True)
+    class Meta:
+        model = Expense
         fields = '__all__'
 
 class UOMSerializer(serializers.ModelSerializer):
@@ -84,3 +90,24 @@ class CurrencyListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CurrencySerializer
     queryset = Currency.objects.all()
+
+class ExpenseCreateView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ExpenseSerializer
+    def perform_create(self, serializer):
+        user = self.request.user
+        branch = serializer.validated_data.get('branch')
+        if user.role == 'MANAGER':
+            branch = user.branch
+        serializer.save(branch=branch)
+
+class ExpenseListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ExpenseSerializer
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'ADMIN':
+            return Expense.objects.all().order_by('-date')
+        elif user.role == 'MANAGER':
+            return Expense.objects.filter(branch=user.branch).order_by('-date')
+        return Expense.objects.none()
