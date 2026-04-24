@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.views import CustomTokenObtainPairView
 from apps.sales.views import sync_sales, SalesListView
 from apps.users.views import (
-    UserListView, UserCreateView, UserDetailView,
+    UserListView, UserCreateView, UserDetailView, UserDeleteView, UserStatusToggleView,
     BranchCreateView, BranchListView, BranchDetailView,
     UOMListView, CurrencyListView,
     ExpenseListView, ExpenseCreateView
@@ -29,6 +29,8 @@ urlpatterns = [
     path('api/users/', UserListView.as_view(), name='users-list'),
     path('api/users/create/', UserCreateView.as_view(), name='user-create'),
     path('api/users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
+    path('api/users/<int:pk>/delete/', UserDeleteView.as_view(), name='user-delete'),
+    path('api/users/<int:pk>/toggle/', UserStatusToggleView.as_view(), name='user-toggle'),
     
     path('api/branches/', BranchListView.as_view(), name='branch-list'),
     path('api/branches/create/', BranchCreateView.as_view(), name='branch-create'),

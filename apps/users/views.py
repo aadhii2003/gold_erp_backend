@@ -11,6 +11,7 @@ class BranchSerializer(serializers.ModelSerializer):
 
 class ExpenseSerializer(serializers.ModelSerializer):
     branch_name = serializers.CharField(source='branch.name', read_only=True)
+    branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all(), required=False)
     class Meta:
         model = Expense
         fields = '__all__'
@@ -51,21 +52,37 @@ class UserListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.role == 'ADMIN':
-            return User.objects.all().order_by('-id')
+            return User.objects.all()
         elif user.role == 'MANAGER':
-            return User.objects.filter(branch=user.branch).order_by('-id')
+            return User.objects.filter(branch=user.branch)
         return User.objects.none()
 
-class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+class UserDetailView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
     queryset = User.objects.all()
+
     def perform_update(self, serializer):
         user = serializer.save()
         password = self.request.data.get('password')
         if password:
             user.set_password(password)
             user.save()
+
+class UserDeleteView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+
+class UserStatusToggleView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
+    def patch(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.is_active = not user.is_active
+        user.save()
+        return Response({'status': 'success', 'is_active': user.is_active})
 
 class BranchCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
