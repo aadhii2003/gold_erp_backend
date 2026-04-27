@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'apps.branches',
     'apps.sales',
     'apps.gold_rates',
+    'apps.density_purity',
 ]
 
 MIDDLEWARE = [

@@ -7,7 +7,7 @@ from apps.users.views import (
     UserListView, UserCreateView, UserDetailView, UserDeleteView, UserStatusToggleView,
     BranchCreateView, BranchListView, BranchDetailView,
     UOMListView, CurrencyListView,
-    ExpenseListView, ExpenseCreateView
+    ExpenseListView, ExpenseCreateView, AdminLogListView
 )
 from apps.gold_rates.views import RateDetailView
 
@@ -43,4 +43,6 @@ urlpatterns = [
     # Constants
     path('api/uoms/', UOMListView.as_view(), name='uom-list'),
     path('api/currencies/', CurrencyListView.as_view(), name='currency-list'),
+    path('api/admin-logs/', AdminLogListView.as_view(), name='admin-logs'),
+    path('api/density-purity/', include('apps.density_purity.urls')),
 ]
