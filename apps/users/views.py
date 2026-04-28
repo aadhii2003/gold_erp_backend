@@ -1,7 +1,7 @@
 from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import User, AdminLog
+from .models import User, UserLog
 from apps.branches.models import Branch, UOM, Currency, Expense
 
 class BranchSerializer(serializers.ModelSerializer):
@@ -34,10 +34,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'role', 'branch', 'branch_name', 'last_login', 'is_active', 'password']
 
-class AdminLogSerializer(serializers.ModelSerializer):
+class UserLogSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     class Meta:
-        model = AdminLog
+        model = UserLog
         fields = '__all__'
 
 class UserCreateView(generics.CreateAPIView):
@@ -58,8 +58,9 @@ class UserCreateView(generics.CreateAPIView):
             new_user.set_password(password)
             new_user.save()
         
-        AdminLog.objects.create(
+        UserLog.objects.create(
             user=user,
+            role=user.role,
             action="CREATE_USER",
             details=f"Created {new_user.role}: {new_user.username} for branch: {new_user.branch.name if new_user.branch else 'Global'}"
         )
@@ -86,6 +87,13 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
         if password:
             user.set_password(password)
             user.save()
+            
+        UserLog.objects.create(
+            user=self.request.user,
+            role=self.request.user.role,
+            action="UPDATE_USER",
+            details=f"Updated user: {user.username} ({user.role})"
+        )
 
 class UserDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
@@ -95,8 +103,9 @@ class UserDeleteView(generics.DestroyAPIView):
         instance = self.get_object()
         
         # Log before deletion
-        AdminLog.objects.create(
+        UserLog.objects.create(
             user=self.request.user,
+            role=self.request.user.role,
             action="DELETE_USER",
             details=f"Permanently removed user: {instance.username} ({instance.role})"
         )
@@ -118,8 +127,9 @@ class UserStatusToggleView(generics.UpdateAPIView):
         user_to_toggle.is_active = not user_to_toggle.is_active
         user_to_toggle.save()
         
-        AdminLog.objects.create(
+        UserLog.objects.create(
             user=request.user,
+            role=request.user.role,
             action="TOGGLE_USER_STATUS",
             details=f"{'Enabled' if user_to_toggle.is_active else 'Disabled'} user: {user_to_toggle.username}"
         )
@@ -131,8 +141,9 @@ class BranchCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         branch = serializer.save()
-        AdminLog.objects.create(
+        UserLog.objects.create(
             user=self.request.user,
+            role=self.request.user.role,
             action="CREATE_BRANCH",
             details=f"Established new branch: {branch.name} with X-Factor: {branch.x_factor}"
         )
@@ -147,21 +158,30 @@ class BranchDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BranchSerializer
     queryset = Branch.objects.all()
 
-    def perform_destroy(self, instance):
-        AdminLog.objects.create(
+    def perform_update(self, serializer):
+        branch = serializer.save()
+        UserLog.objects.create(
             user=self.request.user,
+            role=self.request.user.role,
+            action="UPDATE_BRANCH",
+            details=f"Updated branch details for: {branch.name}"
+        )
+
+    def perform_destroy(self, instance):
+        UserLog.objects.create(
+            user=self.request.user,
+            role=self.request.user.role,
             action="DELETE_BRANCH",
             details=f"Removed branch: {instance.name}"
         )
         instance.delete()
 
-class AdminLogListView(generics.ListAPIView):
+class UserLogListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = AdminLogSerializer
+    serializer_class = UserLogSerializer
     def get_queryset(self):
-        if self.request.user.role == 'ADMIN':
-            return AdminLog.objects.all().order_by('-created_at')
-        return AdminLog.objects.none()
+        # Allow Admin and Manager to view logs (can be filtered by role/branch in future if needed)
+        return UserLog.objects.all().order_by('-created_at')
 
 class UOMListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -181,7 +201,14 @@ class ExpenseCreateView(generics.CreateAPIView):
         branch = serializer.validated_data.get('branch')
         if user.role == 'MANAGER':
             branch = user.branch
-        serializer.save(branch=branch)
+        expense = serializer.save(branch=branch)
+        
+        UserLog.objects.create(
+            user=user,
+            role=user.role,
+            action="CREATE_EXPENSE",
+            details=f"Recorded expense: {expense.grams}g @ {expense.rate_per_gram}/g for {expense.source_name}"
+        )
 
 class ExpenseListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]

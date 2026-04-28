@@ -30,16 +30,16 @@ class Sale(models.Model):
     # Product Table fields (Moved into model directly for Phase 1 simplicity)
     product_name = models.CharField(max_length=255, default="Gold Bar")
     description = models.TextField(blank=True, null=True)
-    gross_weight = models.DecimalField(max_digits=15, decimal_places=3, default=0.0)
-    actual_process_weight = models.DecimalField(max_digits=15, decimal_places=3, default=0.0)
-    second_process_weight = models.DecimalField(max_digits=15, decimal_places=3, default=0.0)
-    process_loss = models.DecimalField(max_digits=15, decimal_places=3, default=0.0)
+    gross_weight = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    actual_process_weight = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    second_process_weight = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    process_loss = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     density = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    actual_product_quality = models.DecimalField(max_digits=10, decimal_places=4, default=0.0) # Purity
+    actual_product_quality = models.DecimalField(max_digits=10, decimal_places=2, default=0.0) # Purity
     
-    manual_first_process = models.DecimalField(max_digits=15, decimal_places=3, default=0.0)
-    manual_purity = models.DecimalField(max_digits=10, decimal_places=4, default=0.0)
-    qty_tolas = models.DecimalField(max_digits=15, decimal_places=4, default=0.0)
+    manual_first_process = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    manual_purity = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    qty_tolas = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     tola_rate = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
 
     unit_price = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)

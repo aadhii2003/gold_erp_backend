@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import generics, serializers
 from .models import Sale
 from apps.branches.models import Branch
+from apps.users.models import UserLog
 
 class SaleSerializer(serializers.ModelSerializer):
     staff_name = serializers.CharField(source='staff.username', read_only=True)
@@ -88,6 +89,13 @@ def sync_sales(request):
                     total_ugx=s.get('total_target_currency', 0)
                 )
                 created_count += 1
+                
+                UserLog.objects.create(
+                    user=request.user,
+                    role=request.user.role,
+                    action="CREATE_SALE",
+                    details=f"Processed transaction {s['id']} for {s.get('vendor', 'Unknown')} (Total: {s.get('subtotal', 0)} USD)"
+                )
         except Exception as e:
             errors.append({'id': s.get('id'), 'error': str(e)})
 

@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Rate
-from apps.users.models import AdminLog
+from apps.users.models import UserLog
 
 class RateDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -23,8 +23,9 @@ class RateDetailView(APIView):
         rate.forex_rate = request.data.get('forex_rate', rate.forex_rate)
         rate.save()
         
-        AdminLog.objects.create(
+        UserLog.objects.create(
             user=request.user,
+            role=request.user.role,
             action="UPDATE_RATES",
             details=f"Updated Gold: ${old_gold} -> ${rate.gold_price}, Forex: {old_forex} -> {rate.forex_rate} UGX"
         )
